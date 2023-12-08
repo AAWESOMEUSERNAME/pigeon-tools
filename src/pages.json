@@ -1,15 +1,14 @@
 {
 	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
 		{
-			"path": "pages/rhythm/index",
-			"style": {
-				"navigationBarTitleText": "节奏练习"
-			}
-		},
-		{
 			"path": "pages/bpm/index",
 			"style": {
 				"navigationBarTitleText": "Bpm计算器"
+			}
+		},{
+			"path": "pages/rhythm/index",
+			"style": {
+				"navigationBarTitleText": "节奏练习"
 			}
 		}
 	],
@@ -25,5 +24,21 @@
 			// uni-ui 规则如下配置
 			"^uni-(.*)": "@dcloudio/uni-ui/lib/uni-$1/uni-$1.vue"
 		}
+	},
+	"tabBar": {
+		"iconWidth": "0px",
+		"height": "20px",
+		"spacing": "0px",
+		"color": "#7A7E83",
+		"selectedColor": "#FED480",
+		"borderStyle": "black",
+		"backgroundColor": "#000",
+		"list": [{
+			"pagePath": "pages/bpm/index",
+			"text": "BPM"
+		}, {
+			"pagePath": "pages/rhythm/index",
+			"text": "节奏"
+		}]
 	}
 }

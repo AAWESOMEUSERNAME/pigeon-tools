@@ -1,5 +1,5 @@
 {
-    "name" : "BPM计算器",
+    "name" : "观赏鸽工具箱",
     "appid" : "__UNI__40A7BB0",
     "description" : "",
     "versionName" : "1.0.0",
@@ -52,7 +52,8 @@
     "mp-weixin" : {
         "appid" : "wxca86424d888d0b0f",
         "setting" : {
-            "urlCheck" : false
+            "urlCheck" : false,
+            "minified" : true
         },
         "usingComponents" : true
     },

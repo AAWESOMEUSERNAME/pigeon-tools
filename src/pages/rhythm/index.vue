@@ -10,7 +10,7 @@
 		<view class="notes">
 			<view class="note-wrapper" v-for="(n,index) in noteArr" :key="index">
 				<view class="note-hit-area" @click=" ()=> handleNoteChange(index)">
-					<view :class="n.getClass()" />
+					<view :class="`${n.getClass()} ${currentPlayIndex === index? 'current':''}`" />
 				</view>
 				<view class="note-index" :class="stress[index]? 'stress': ''" @click="() => handleStressChange(index)">
 					{{index + 1}}
@@ -24,7 +24,12 @@
 				</view>
 				<uni-number-box v-model="bpm" :max="300" :min="10" background="#FF7530"></uni-number-box>
 			</label>
-			<button class="play-btn" @click="handlePlay">Play</button>
+			<button class="play-btn" @click="handlePlay">播放</button>
+			<view class="desc">
+				使用说明：<br />
+				点击竖线切换拍型<br />
+				点击数字切换重音<br />
+			</view>
 		</view>
 	</PageContent>
 </template>
@@ -75,6 +80,7 @@
 	const bpm = ref(100)
 	const player = shallowReadonly(new SoundEffectPlayer())
 	const stress = reactive<Record<number, boolean | undefined>>({ 0: true })
+	const currentPlayIndex = ref<number | undefined>()
 
 	watch(timeSignature, () => {
 		noteArr.value = defaultArrMap[timeSignature.value]
@@ -98,7 +104,14 @@
 	}
 
 	const handlePlay = () => {
-		player.play(noteArr.value.map(n => n.value), stress, bpm.value)
+		currentPlayIndex.value = undefined
+		player.play({
+			notes: noteArr.value.map(n => n.value),
+			stressMap: stress,
+			bpm: bpm.value,
+			onPlay: (i) => currentPlayIndex.value = i,
+			onEnd: () => currentPlayIndex.value = undefined
+		})
 	}
 </script>
 
@@ -191,8 +204,13 @@
 		background-color: #000;
 	}
 
+	.current,
+	.current::before {
+		background-color: #FF7530;
+	}
+
 	.stress {
-		color: red;
+		color: #FF7530;
 	}
 
 	.row {
@@ -204,10 +222,15 @@
 	.title {
 		width: 6em;
 	}
-	
+
 	.play-btn {
 		background-color: #000;
 		color: #fff;
 		width: 100%;
+	}
+
+	.desc {
+		color: #7A7E83;
+		font-size: 0.9em;
 	}
 </style>

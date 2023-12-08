@@ -28,6 +28,7 @@ export class SoundEffectPlayer {
 
 	private stressContext : UniApp.InnerAudioContext
 	private normalContext : UniApp.InnerAudioContext
+	private currentTaskTimers : number[] = []
 
 	private playStress() {
 		this.stressContext.seek(0)
@@ -51,11 +52,26 @@ export class SoundEffectPlayer {
 
 	}
 
-	play(notes : NoteType[], stressMap : Record<number, boolean | undefined>, bpm : number) {
+	play({
+		notes,
+		stressMap,
+		bpm,
+		onPlay,
+		onEnd,
+	} : {
+		notes : NoteType[],
+		stressMap : Record<number, boolean | undefined>,
+		bpm : number,
+		onPlay : (inx : number) => void,
+		onEnd : () => void
+	}) {
+		this.currentTaskTimers.forEach(id => clearTimeout(id))
+		this.currentTaskTimers.splice(0, this.currentTaskTimers.length)
 		const duration = getSecondsIntervalByBpm(bpm)
 		const syncopationDuration = duration * 0.8 / 3
 		const taskArr : {
 			isStress ?: boolean
+			originIndex ?: number
 			mute ?: boolean
 			duration : number
 		}[] = []
@@ -63,17 +79,13 @@ export class SoundEffectPlayer {
 		notes.forEach((n, i, arr) => {
 			const next = arr[i + 1]
 			const isStress = stressMap[i]
-			if (next === undefined) {
-				taskArr.push({ isStress, mute: n === 2, duration: 0 })
-				return
-			}
 			const currentDuration = next === 1 ? duration - syncopationDuration : duration
 
 			switch (n) {
 				case 0: {
 					taskArr.push({
 						isStress: stressMap[i],
-						duration: currentDuration
+						duration: currentDuration, originIndex: i
 					})
 					break;
 				}
@@ -82,13 +94,13 @@ export class SoundEffectPlayer {
 						duration: syncopationDuration
 					})
 					taskArr.push({
-						isStress, duration: currentDuration
+						isStress, duration: currentDuration, originIndex: i
 					})
 					break
 				}
 				case 2: {
 					taskArr.push({
-						mute: true, duration: currentDuration
+						mute: true, duration: currentDuration, originIndex: i
 					})
 					break;
 				}
@@ -96,9 +108,11 @@ export class SoundEffectPlayer {
 		})
 
 		let currentDelay = 0
-		taskArr.forEach(t => {
-			console.log('currentDelay', currentDelay)
-			setTimeout(() => {
+		taskArr.forEach((t) => {
+			const timerId = setTimeout(() => {
+				if (t.originIndex !== undefined) {
+					onPlay(t.originIndex)
+				}
 				if (!t.mute) {
 					if (t.isStress) {
 						this.playStress()
@@ -108,6 +122,11 @@ export class SoundEffectPlayer {
 				}
 			}, currentDelay * 1000)
 			currentDelay += t.duration
+			this.currentTaskTimers.push(timerId)
 		})
+		const endTimerId = setTimeout(() => {
+			onEnd()
+		}, currentDelay * 1000)
+		this.currentTaskTimers.push(endTimerId)
 	}
 }

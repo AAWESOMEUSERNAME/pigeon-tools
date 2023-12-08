@@ -54,7 +54,6 @@
     "@dcloudio/uni-quickapp-webview": "3.0.0-3081220230817001",
     "@dcloudio/uni-ui": "^1.4.28",
     "lodash": "^4.17.21",
-    "luxon": "^3.4.4",
     "vue": "^3.2.45",
     "vue-i18n": "^9.1.9"
   },
@@ -65,7 +64,6 @@
     "@dcloudio/uni-stacktracey": "3.0.0-3081220230817001",
     "@dcloudio/vite-plugin-uni": "3.0.0-3081220230817001",
     "@types/lodash": "^4.14.202",
-    "@types/luxon": "^3.3.7",
     "@vue/runtime-core": "^3.2.45",
     "@vue/tsconfig": "^0.1.3",
     "sass": "^1.69.5",

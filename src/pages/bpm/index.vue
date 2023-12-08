@@ -33,10 +33,9 @@
 <script setup lang="ts">
 	import PageContent from '@/components/PageContent/index.vue'
 	import { getBpmByTwoBeat } from '@/utils/bpm';
-	import { DateTime } from 'luxon';
 	import { ref, computed } from 'vue'
 
-	const preTime = ref<DateTime | undefined>(undefined)
+	const preTime = ref<Date | undefined>(undefined)
 	const baseList = [1, 5, 10, 15]
 	const bpmList = ref<number[]>([])
 	const hisList = ref<number[]>([])
@@ -58,7 +57,7 @@
 	}
 
 	const hit = () => {
-		const current = DateTime.now()
+		const current = new Date()
 		const pre = preTime.value
 		if (pre) {
 			const currentBpm = getBpmByTwoBeat(pre, current)
