@@ -37,7 +37,27 @@
 <script setup lang="ts">
 	import PageContent from '@/components/PageContent/index.vue'
 	import { SoundEffectPlayer, type NoteType } from '@/utils/audio';
+	import { useShare } from '@/utils/share';
 	import { reactive, ref, shallowReadonly, watch } from 'vue';
+
+	const {onShareTimeline, onShareAppMessage} = useShare()
+	// const getCurrentPath = () => {
+	// 	const pages = getCurrentPages()
+	// 	return `/${pages[pages.length - 1].route}`;
+	// }
+	// function onShareAppMessage(res){
+	// 	return {
+	// 		title: '发送给朋友',
+	// 		path: getCurrentPath()
+	// 	}
+	// }
+	// //分享到朋友圈
+	// function onShareTimeline(res){
+	// 	return {
+	// 		title: '分享到朋友圈',
+	// 		path: getCurrentPath()
+	// 	}
+	// }
 
 	enum TIME_SIGNATURE {
 		EIGHT_EIGHT, EIGHT_SIX

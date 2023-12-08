@@ -33,7 +33,10 @@
 <script setup lang="ts">
 	import PageContent from '@/components/PageContent/index.vue'
 	import { getBpmByTwoBeat } from '@/utils/bpm';
+	import { useShare } from '@/utils/share';
 	import { ref, computed } from 'vue'
+
+	const { onShareTimeline, onShareAppMessage } = useShare()
 
 	const preTime = ref<Date | undefined>(undefined)
 	const baseList = [1, 5, 10, 15]
