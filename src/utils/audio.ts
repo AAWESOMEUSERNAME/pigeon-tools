@@ -1,55 +1,64 @@
 import { getSecondsIntervalByBpm } from "./bpm"
 
+class BeatPlayerPool {
+	private stressPool : BeatPlayer[] = Array.from({ length: 5 }, () => {
+		const player = new BeatPlayer("/static/audio/cowbell_stress.mp3", () => {
+			this.stressPool.push(player)
+		})
+		return player
+	})
+	private normalPool : BeatPlayer[] = Array.from({ length: 5 }, () => {
+		const player = new BeatPlayer("/static/audio/cowbell_normal.mp3", () => {
+			this.normalPool.push(player)
+		})
+		return player
+	})
+
+	play(isStress ?: boolean) {
+		const player = isStress ? this.stressPool.shift() : this.normalPool.shift()
+		if (player) {
+			player.play()
+		} else {
+			console.error('播放器不足', isStress, this.stressPool, this.normalPool)
+		}
+	}
+}
+
+class BeatPlayer {
+	constructor(src : string, onPlayed : () => void) {
+		this.context = uni.createInnerAudioContext()
+		this.context.src = src
+		this.context.playbackRate = 2
+		this.context.onCanplay(() => {
+			this.context.volume = 0.1
+			this.context.play()
+			this.context.volume = 1
+			this.context.onEnded(onPlayed)
+		})
+	}
+
+	private context : UniApp.InnerAudioContext
+
+	play() {
+		this.context.play()
+	}
+}
+
 export type NoteType =
 	0 // 普通音
 	| 1 // 切分音
 	| 2 // 休止音
 
 export class SoundEffectPlayer {
-	constructor() {
-		this.stressContext = uni.createInnerAudioContext()
-		this.stressContext.src = "/static/audio/cowbell_stress.mp3"
-		this.stressContext.playbackRate = 2
-		this.normalContext = uni.createInnerAudioContext()
-		this.normalContext.src = "/static/audio/cowbell_normal.mp3"
-		this.normalContext.playbackRate = 2
-
-		this.stressContext.onCanplay(() => {
-			this.stressContext.volume = 0
-			this.stressContext.play()
-			this.stressContext.volume = 1
-		})
-		this.normalContext.onCanplay(() => {
-			this.normalContext.volume = 0
-			this.normalContext.play()
-			this.normalContext.volume = 1
-		})
-	}
-
-	private stressContext : UniApp.InnerAudioContext
-	private normalContext : UniApp.InnerAudioContext
+	private pool : BeatPlayerPool = new BeatPlayerPool()
 	private currentTaskTimers : number[] = []
 
 	private playStress() {
-		this.stressContext.seek(0)
-		this.stressContext.play()
+		this.pool.play(true)
 	}
 
 	private playNormal() {
-		this.normalContext.seek(0)
-		this.normalContext.play()
-	}
-
-	warmUp() {
-		this.normalContext.volume = 0
-		this.stressContext.volume = 0
-
-		this.normalContext.play()
-		this.stressContext.play()
-
-		this.normalContext.volume = 1
-		this.stressContext.volume = 1
-
+		this.pool.play()
 	}
 
 	play({
@@ -58,12 +67,14 @@ export class SoundEffectPlayer {
 		bpm,
 		onPlay,
 		onEnd,
+		loop
 	} : {
 		notes : NoteType[],
 		stressMap : Record<number, boolean | undefined>,
 		bpm : number,
 		onPlay : (inx : number) => void,
-		onEnd : () => void
+		onEnd : () => void,
+		loop ?: boolean
 	}) {
 		this.currentTaskTimers.forEach(id => clearTimeout(id))
 		this.currentTaskTimers.splice(0, this.currentTaskTimers.length)
@@ -107,26 +118,34 @@ export class SoundEffectPlayer {
 			}
 		})
 
-		let currentDelay = 0
-		taskArr.forEach((t) => {
-			const timerId = setTimeout(() => {
-				if (t.originIndex !== undefined) {
-					onPlay(t.originIndex)
-				}
-				if (!t.mute) {
-					if (t.isStress) {
-						this.playStress()
-					} else {
-						this.playNormal()
+		const runLoop = (loop ?: boolean) => {
+			let currentDelay = 0
+			taskArr.forEach((t) => {
+				const timerId = setTimeout(() => {
+					if (t.originIndex !== undefined) {
+						onPlay(t.originIndex)
 					}
-				}
+					if (!t.mute) {
+						if (t.isStress) {
+							this.playStress()
+						} else {
+							this.playNormal()
+						}
+					}
+				}, currentDelay * 1000)
+				currentDelay += t.duration
+				this.currentTaskTimers.push(timerId)
+			})
+			const endTimerId = setTimeout(() => {
+				loop ? runLoop(loop) : onEnd()
 			}, currentDelay * 1000)
-			currentDelay += t.duration
-			this.currentTaskTimers.push(timerId)
-		})
-		const endTimerId = setTimeout(() => {
-			onEnd()
-		}, currentDelay * 1000)
-		this.currentTaskTimers.push(endTimerId)
+			this.currentTaskTimers.push(endTimerId)
+		}
+
+		runLoop(loop)
+	}
+
+	stop() {
+		this.currentTaskTimers.forEach(t => clearTimeout(t))
 	}
 }

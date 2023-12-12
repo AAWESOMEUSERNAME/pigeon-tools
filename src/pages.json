@@ -5,7 +5,7 @@
 			"style": {
 				"navigationBarTitleText": "Bpm计算器"
 			}
-		},{
+		}, {
 			"path": "pages/rhythm/index",
 			"style": {
 				"navigationBarTitleText": "节奏练习"

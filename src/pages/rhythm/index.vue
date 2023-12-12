@@ -20,15 +20,29 @@
 		<view class="operate-area">
 			<label class="row">
 				<view class="title">
-					BPM:
+					BPM(100 ~ 180):
 				</view>
-				<uni-number-box v-model="bpm" :max="300" :min="10" background="#FF7530"></uni-number-box>
+				<view class="field">
+					<uni-number-box v-model="bpm" :max="180" :min="100" background="#FF7530"></uni-number-box>
+				</view>
 			</label>
+			<!-- <label class="row">
+				<view class="title">
+					循环播放:
+				</view>
+				<switch :checked="loop" @change="handleLoopChange" color="#FF7530" style="transform:scale(0.7)" />
+			</label> -->
 			<button class="play-btn" @click="handlePlay">播放</button>
 			<view class="desc">
 				使用说明：<br />
 				点击竖线切换拍型<br />
 				点击数字切换重音<br />
+				<view class="split"></view>
+				本页面目前面临一些技术问题，如果你有办法解决：<br />
+				1. uniapp或小程序多次setTimeout执行难以保证实际播放间隔<br />
+				2. uniapp的InnerAudioContext无法频繁重复播放（本应用暂时使用资源池的方式解决）<br />
+				3. InnerAudioContext首次播放存在延迟，且播放音量调节无效<br />
+				请联系作者😄<br />
 			</view>
 		</view>
 	</PageContent>
@@ -38,26 +52,10 @@
 	import PageContent from '@/components/PageContent/index.vue'
 	import { SoundEffectPlayer, type NoteType } from '@/utils/audio';
 	import { useShare } from '@/utils/share';
+	import { onHide } from '@dcloudio/uni-app';
 	import { reactive, ref, shallowReadonly, watch } from 'vue';
 
-	const {onShareTimeline, onShareAppMessage} = useShare()
-	// const getCurrentPath = () => {
-	// 	const pages = getCurrentPages()
-	// 	return `/${pages[pages.length - 1].route}`;
-	// }
-	// function onShareAppMessage(res){
-	// 	return {
-	// 		title: '发送给朋友',
-	// 		path: getCurrentPath()
-	// 	}
-	// }
-	// //分享到朋友圈
-	// function onShareTimeline(res){
-	// 	return {
-	// 		title: '分享到朋友圈',
-	// 		path: getCurrentPath()
-	// 	}
-	// }
+	const { onShareTimeline, onShareAppMessage } = useShare()
 
 	enum TIME_SIGNATURE {
 		EIGHT_EIGHT, EIGHT_SIX
@@ -98,6 +96,7 @@
 	const timeSignature = ref<TIME_SIGNATURE>(TIME_SIGNATURE.EIGHT_EIGHT)
 	const noteArr = ref<Note[]>(defaultArrMap[timeSignature.value])
 	const bpm = ref(100)
+	const loop = ref(false)
 	const player = shallowReadonly(new SoundEffectPlayer())
 	const stress = reactive<Record<number, boolean | undefined>>({ 0: true })
 	const currentPlayIndex = ref<number | undefined>()
@@ -123,6 +122,10 @@
 		stress[inx] = !stress[inx]
 	}
 
+	const handleLoopChange = (e : any) => {
+		loop.value = e.detail.value
+	}
+
 	const handlePlay = () => {
 		currentPlayIndex.value = undefined
 		player.play({
@@ -130,9 +133,15 @@
 			stressMap: stress,
 			bpm: bpm.value,
 			onPlay: (i) => currentPlayIndex.value = i,
-			onEnd: () => currentPlayIndex.value = undefined
+			onEnd: () => currentPlayIndex.value = undefined,
+			loop: loop.value
 		})
 	}
+
+	onHide(() => {
+		currentPlayIndex.value = undefined
+		player.stop()
+	})
 </script>
 
 <style>
@@ -236,13 +245,13 @@
 	.row {
 		display: flex;
 		align-items: center;
-		justify-content: flex-start;
+		justify-content: space-between;
 	}
 
 	.title {
-		width: 6em;
+		width: max-content;
 	}
-
+	
 	.play-btn {
 		background-color: #000;
 		color: #fff;
@@ -252,5 +261,11 @@
 	.desc {
 		color: #7A7E83;
 		font-size: 0.9em;
+	}
+
+	.split {
+		width: 100%;
+		height: 1px;
+		margin: 0.5em 0;
 	}
 </style>

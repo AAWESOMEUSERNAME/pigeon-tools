@@ -16,7 +16,8 @@
 	.PageContent_container {
 		box-sizing: border-box;
 		padding: 1em;
-		height: 100vh;
+		min-height: 100vh;
+		height: max-content;
 		width: 100vw;
 		background-color: #FED480;
 		display: flex;
